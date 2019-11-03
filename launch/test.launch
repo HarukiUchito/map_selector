@@ -1,0 +1,12 @@
+<launch>
+
+    <arg name="rvizconfig" default="/home/uchiito-h/catkin_ws/src/amcl_map_changable/rviz/test.rviz" />
+    <!--node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(arg rvizconfig)"/-->
+    <node pkg="rviz" type="rviz" name="rviz" output="log"/>
+
+    <node pkg="map_selector" type="map_selector_node" name="map_selector" output="screen">
+        <rosparam command="load" file="$(find map_selector)/config/tsukuba_univ.yaml"/>
+        <param name="frame_id" value="map" />
+    </node>
+
+</launch>

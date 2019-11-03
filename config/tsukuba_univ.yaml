@@ -1,0 +1,18 @@
+frame_id: map
+
+map_list:
+  - path: /home/uchiito-h/TsukubaChallengeLog/2019/09_25/01/map.yaml
+    lat: 36.109211738
+    lon: 140.100415260
+    alt: 59.7116
+    rad: 0.51885606888
+  - path: /home/uchiito-h/TsukubaChallengeLog/2019/09_25/02/map.yaml
+    lat: 36.11202016
+    lon: 140.09887361
+    alt: 66.920
+    rad: 0.48785606888
+  - path: /home/uchiito-h/TsukubaChallengeLog/2019/09_25/03/map.yaml
+    lat: 36.11201016
+    lon: 140.09886361
+    alt: 66.920
+    rad: 0.48785606888
