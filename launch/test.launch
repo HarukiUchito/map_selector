@@ -1,12 +1,29 @@
 <launch>
 
+    <arg name="rosbag_file" default="/home/uchiito-h/TsukubaChallengeLog/2019/11_04_map_change/logging_2019-11-04-06-10-38.bag"/>
+
+    <param name="use_sim_time" value="true" />
+    <node pkg="rosbag" type="play" name="player" output="log" args="--clock $(arg rosbag_file)">
+    </node>
+
     <arg name="rvizconfig" default="/home/uchiito-h/catkin_ws/src/amcl_map_changable/rviz/test.rviz" />
-    <!--node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(arg rvizconfig)"/-->
-    <node pkg="rviz" type="rviz" name="rviz" output="log"/>
+    <node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(arg rvizconfig)"/>
+    <!-- RobotModel -->
+    <include file="$(find entry_point)/launch/sub/rvizmodel.launch"/>
 
     <node pkg="map_selector" type="map_selector_node" name="map_selector" output="screen">
-        <rosparam command="load" file="$(find map_selector)/config/tsukuba_univ.yaml"/>
+        <!--rosparam command="load" file="$(find map_selector)/config/tsukuba_univ.yaml"/-->
+        <rosparam command="load" file="$(find map_selector)/config/sb10.yaml"/>
         <param name="frame_id" value="map" />
     </node>
+
+    <!-- robot localization for Odom + IMU -->
+    <include file="$(find entry_point)/launch/sub/robot_localization_odom_imu.launch">
+        <arg name="odom_topic" default="odom_with_covariance"/>
+        <arg name="imu_topic" default="imu_with_covariance"/>
+    </include>
+
+    <!-- amcl -->
+    <include file="$(find entry_point)/launch/sub/amcl_map_change.launch"/>
 
 </launch>

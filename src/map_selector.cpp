@@ -86,6 +86,9 @@ void MapSelector::run()
     {
         for (int i = 0; i < pub_maps.size(); ++i)
             pub_maps[i].publish(maps_[i]);
+        auto cpmap = maps_[current_map_];
+        cpmap.header.frame_id = "map";
+        pub_map.publish(cpmap);
 
         double cnt = 1.0;
         for (int i = 0; i < map_infos_.size(); ++i)
@@ -95,6 +98,7 @@ void MapSelector::run()
             geometry_msgs::TransformStamped trans;
             trans.header.frame_id = "gps";
             trans.child_frame_id = map_info.frame_id;
+            trans.header.stamp = ros::Time::now();
 
             int height = 0;
             if (i != current_map_)
@@ -107,6 +111,13 @@ void MapSelector::run()
 
             tf2::convert(tr * ro, trans.transform);
             tfb.sendTransform(trans);
+
+            if (i == current_map_)
+            {
+                auto cptrans = trans;
+                cptrans.child_frame_id = "map";
+                tfb.sendTransform(cptrans);
+            }
         }
 
         ros::spinOnce();
