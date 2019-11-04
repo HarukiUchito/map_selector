@@ -16,6 +16,7 @@
 struct MapInfo {
     std::string frame_id;
     std::string path;
+    std::string obj_map_path;
     double x;
     double y;
     double rad; // relative yaw to gnss coordinate
@@ -33,14 +34,15 @@ private:
     geometry_msgs::PoseWithCovarianceStamped recent_pose_;
     void subPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&);
 
-    ros::Publisher pub_map_;
+    ros::Publisher pub_map_, pub_obj_map_;
     std::vector<ros::Publisher> pub_maps_;
 
     tf2_ros::TransformBroadcaster tfb_;
     tf2_ros::Buffer tf_buffer_;
 
     int current_map_ {-1};
-    std::vector<nav_msgs::OccupancyGrid> maps_;
+    std::vector<nav_msgs::OccupancyGrid> maps_, obj_maps_;
+    nav_msgs::OccupancyGrid readMap(std::string path);
     void readMaps(std::string frame_id);
     void publishMaps();
 
