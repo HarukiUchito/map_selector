@@ -1,11 +1,9 @@
 #include "map_selector.hpp"
 #include "utility.hpp"
 
-#include <ros/ros.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf2_ros/transform_broadcaster.h>
 #include <yaml-cpp/yaml.h>
 #include <map_server/image_loader.h>
+#include <nav_msgs/SetMap.h>
 
 #include <fstream>
 #include <libgen.h>
@@ -18,12 +16,11 @@ void operator>>(const YAML::Node &node, T &i)
 
 MapSelector::MapSelector()
 {
-    ros::NodeHandle nhp{"~"};
-    std::string frame_id{getParamFromRosParam<std::string>(nhp, "frame_id")};
+    std::string frame_id{getParamFromRosParam<std::string>(nhp_, "frame_id")};
     
     // read map information
     XmlRpc::XmlRpcValue map_list;
-    nhp.getParam("map_list", map_list);
+    nhp_.getParam("map_list", map_list);
     ROS_ASSERT(map_list.getType() == XmlRpc::XmlRpcValue::TypeArray);
     ROS_INFO("number of map info: %i", (int)map_list.size());
 
@@ -70,55 +67,24 @@ MapSelector::MapSelector()
 
 void MapSelector::run()
 {
-    ros::NodeHandle nhp{"~"};
+    // initialize ros objects
+    sub_pose_ = nhp_.subscribe("/amcl_pose", 1, &MapSelector::subPoseCallback, this);
 
-    auto pub_map{nhp.advertise<nav_msgs::OccupancyGrid>("map", 1)};
-    std::vector<ros::Publisher> pub_maps;
+    pub_map_ = nhp_.advertise<nav_msgs::OccupancyGrid>("map", 1);
     for (int i = 0; i < maps_.size(); ++i)
-        pub_maps.push_back(nhp.advertise<nav_msgs::OccupancyGrid>("map" + std::to_string(i), 1));
+        pub_maps_.push_back(nhp_.advertise<nav_msgs::OccupancyGrid>("map" + std::to_string(i), 1));
 
-    auto _ = nhp.advertiseService("change_map", &MapSelector::changeMapCallback, this);
+    ros::NodeHandle nh;
+    auto srv = nhp_.advertiseService("change_map", &MapSelector::changeMapCallback, this);
+    cli_set_map_ = nh.serviceClient<nav_msgs::SetMap>("set_map");
 
-    tf2_ros::TransformBroadcaster tfb;
-
+    tf2_ros::TransformListener tfl {tf_buffer_};
+    
     ros::Rate rate{5};
     while (ros::ok())
     {
-        for (int i = 0; i < pub_maps.size(); ++i)
-            pub_maps[i].publish(maps_[i]);
-        auto cpmap = maps_[current_map_];
-        cpmap.header.frame_id = "map";
-        pub_map.publish(cpmap);
-
-        double cnt = 1.0;
-        for (int i = 0; i < map_infos_.size(); ++i)
-        {
-            MapInfo map_info {map_infos_[i]};
-
-            geometry_msgs::TransformStamped trans;
-            trans.header.frame_id = "gps";
-            trans.child_frame_id = map_info.frame_id;
-            trans.header.stamp = ros::Time::now();
-
-            int height = 0;
-            if (i != current_map_)
-                height = -(i+1);
-
-            tf2::Quaternion zero; zero.setRPY(0.0, 0.0, 0.0);
-            tf2::Transform tr(zero, tf2::Vector3(map_info.x, map_info.y, height));
-            tf2::Quaternion quat; quat.setRPY(0.0, 0.0, map_info.rad);
-            tf2::Transform ro(quat);
-
-            tf2::convert(tr * ro, trans.transform);
-            tfb.sendTransform(trans);
-
-            if (i == current_map_)
-            {
-                auto cptrans = trans;
-                cptrans.child_frame_id = "map";
-                tfb.sendTransform(cptrans);
-            }
-        }
+        publishMaps();
+        publishTransforms();
 
         ros::spinOnce();
         rate.sleep();
@@ -139,6 +105,43 @@ bool MapSelector::changeMapCallback(
     }
 
     current_map_ = num;
+
+    try
+    {
+        geometry_msgs::PoseStamped in;
+        geometry_msgs::PoseStamped out;
+        geometry_msgs::PoseWithCovarianceStamped out_msg;
+        in.header = recent_pose_.header;
+        in.header.stamp = ros::Time(0);
+        in.pose = recent_pose_.pose.pose;
+        geometry_msgs::TransformStamped trans = tf_buffer_.lookupTransform(
+            "map" + std::to_string(num),
+            recent_pose_.header.frame_id,
+            in.header.stamp,
+            ros::Duration(0.5)
+        );
+        tf2::doTransform(in, out, trans);
+        out_msg = recent_pose_;
+        out_msg.header = out.header;
+        out_msg.pose.pose = out.pose;
+        ROS_INFO("tr pose frame id: %s", out_msg.header.frame_id.c_str());
+        ROS_INFO("tr pos x: %f, y: %f", out_msg.pose.pose.position.x, out_msg.pose.pose.position.y);
+
+        out_msg.header.frame_id = "map";
+        nav_msgs::SetMap set_map;
+        set_map.request.initial_pose = out_msg;
+        set_map.request.map = maps_[num];
+        if (cli_set_map_.call(set_map))
+            ROS_INFO("Succeeded to call set_map");
+        else
+        {
+            ROS_ERROR("failed to call set_map");
+        }
+    }
+    catch (tf2::TransformException& e)
+    {
+        ROS_WARN("pose_transform: %s", e.what());
+    }
 
     res.response = 1;
     return true;
@@ -286,4 +289,51 @@ void MapSelector::readMaps(std::string frame_id)
         maps_.push_back(map_resp.map);
     }
     ROS_INFO("read %d maps", (int)maps_.size());
+}
+
+void MapSelector::publishMaps()
+{
+    for (int i = 0; i < pub_maps_.size(); ++i)
+        pub_maps_[i].publish(maps_[i]);
+
+    auto cpmap = maps_[current_map_];
+    cpmap.header.frame_id = "map";
+    pub_map_.publish(cpmap);
+}
+
+void MapSelector::publishTransforms()
+{
+    for (int i = 0; i < map_infos_.size(); ++i)
+    {
+        MapInfo map_info {map_infos_[i]};
+
+        geometry_msgs::TransformStamped trans;
+        trans.header.frame_id = "gps";
+        trans.child_frame_id = map_info.frame_id;
+        trans.header.stamp = ros::Time::now();
+
+        int height = 0;
+        if (i != current_map_)
+            height = -(i+1);
+
+        tf2::Quaternion zero; zero.setRPY(0.0, 0.0, 0.0);
+        tf2::Transform tr(zero, tf2::Vector3(map_info.x, map_info.y, height));
+        tf2::Quaternion quat; quat.setRPY(0.0, 0.0, map_info.rad);
+        tf2::Transform ro(quat);
+
+        tf2::convert(tr * ro, trans.transform);
+        tfb_.sendTransform(trans);
+
+        if (i == current_map_)
+        {
+            auto cptrans = trans;
+            cptrans.child_frame_id = "map";
+            tfb_.sendTransform(cptrans);
+        }
+    }
+}
+
+void MapSelector::subPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose)
+{
+    recent_pose_ = *pose;
 }
