@@ -87,7 +87,8 @@ void MapSelector::run()
         pub_maps_.push_back(nhp_.advertise<nav_msgs::OccupancyGrid>("map" + std::to_string(i), 1));
 
     ros::NodeHandle nh;
-    auto srv = nhp_.advertiseService("change_map", &MapSelector::changeMapCallback, this);
+    auto trgps_srv = nhp_.advertiseService("transform_gps_pose", &MapSelector::transformGPSCallback, this);
+    auto chmap_srv = nhp_.advertiseService("change_map", &MapSelector::changeMapCallback, this);
     cli_set_map_ = nh.serviceClient<nav_msgs::SetMap>("set_map");
 
     tf2_ros::TransformListener tfl {tf_buffer_};
@@ -101,6 +102,34 @@ void MapSelector::run()
         ros::spinOnce();
         rate.sleep();
     }
+}
+
+bool MapSelector::transformGPSCallback(
+    map_selector::transform_gps_pose::Request &req,
+    map_selector::transform_gps_pose::Response &res
+)
+{
+    try
+    {
+        geometry_msgs::PoseStamped in;
+        geometry_msgs::PoseStamped out;
+        in.header.frame_id = "gps";
+        in.header.stamp = ros::Time(0);
+        in.pose = req.gps_pose;
+        geometry_msgs::TransformStamped trans = tf_buffer_.lookupTransform(
+            "map" + std::to_string(current_map_),
+            "gps",
+            in.header.stamp,
+            ros::Duration(0.5)
+        );
+        tf2::doTransform(in, out, trans);
+        res.map_pose = out.pose;
+    }
+    catch (tf2::TransformException& e)
+    {
+        ROS_WARN("transform gps pose exception: %s", e.what());
+    }
+    return true;
 }
 
 bool MapSelector::changeMapCallback(
@@ -344,6 +373,7 @@ void MapSelector::publishTransforms()
         tf2::Transform ro(quat);
 
         tf2::convert(tr * ro, trans.transform);
+        //tf2::convert(ro * tr, trans.transform);
         tfb_.sendTransform(trans);
 
         if (i == current_map_)

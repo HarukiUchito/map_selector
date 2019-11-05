@@ -1,14 +1,14 @@
 frame_id: map
 
 map_list:
-  - path: /home/aqua/catkin_ws/src/Aqua2019/entry_point/map/map_change/center0.yaml
-    obj_map_path: /home/aqua/catkin_ws/src/Aqua2019/entry_point/map/map_change/center0_obj.yaml
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/center0.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/center0_obj.yaml
     lat: 36.109211738
     lon: 140.100415260
     alt: 59.7116
     rad: 0.0
-  - path: /home/aqua/catkin_ws/src/Aqua2019/entry_point/map/map_change/center1.yaml
-    obj_map_path: /home/aqua/catkin_ws/src/Aqua2019/entry_point/map/map_change/center1_obj.yaml
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/center1.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/center1_obj.yaml
     lat: 36.109211738
     lon: 140.100415260
     alt: 59.7116

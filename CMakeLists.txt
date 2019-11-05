@@ -62,6 +62,7 @@ find_package(yaml-cpp REQUIRED)
 add_service_files(
   FILES
   change_map.srv
+  transform_gps_pose.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -75,6 +76,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
+  geometry_msgs
 )
 
 ################################################

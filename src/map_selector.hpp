@@ -11,6 +11,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <map_selector/change_map.h>
+#include <map_selector/transform_gps_pose.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 struct MapInfo {
@@ -51,6 +52,10 @@ private:
     bool changeMapCallback(
         map_selector::change_map::Request &req,
         map_selector::change_map::Response &res
+    );
+    bool transformGPSCallback(
+        map_selector::transform_gps_pose::Request &req,
+        map_selector::transform_gps_pose::Response &res
     );
 
     std::vector<MapInfo> map_infos_;

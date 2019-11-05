@@ -1,0 +1,15 @@
+frame_id: map
+
+map_list:
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/mid0.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/mid0.yaml
+    lat: 36.109211738
+    lon: 140.100415260
+    alt: 59.7116
+    rad: 0.0
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/mid1.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/mid1.yaml
+    lat: 36.109176738
+    lon: 140.100925260
+    alt: 59.7116
+    rad: -1.550
