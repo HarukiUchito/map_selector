@@ -368,7 +368,7 @@ void MapSelector::publishTransforms()
             height = -(i+1);
 
         tf2::Quaternion zero; zero.setRPY(0.0, 0.0, 0.0);
-        tf2::Transform tr(zero, tf2::Vector3(map_info.x, map_info.y, height));
+        tf2::Transform tr(zero, tf2::Vector3(map_info.x, map_info.y, height * 0.01));
         tf2::Quaternion quat; quat.setRPY(0.0, 0.0, map_info.rad);
         tf2::Transform ro(quat);
 

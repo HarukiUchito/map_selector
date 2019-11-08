@@ -1,0 +1,27 @@
+frame_id: map
+
+map_list:
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map1.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map1.yaml
+    lat: 36.082911021000001028 #36.082911021
+    lon: 140.07698824999999943 #140.07698825
+    alt: 65.671800000000004616 #65.6718
+    rad: -3.19985606888
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map2.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map2.yaml
+    lat: 36.082060332
+    lon: 140.081117957
+    alt: 65.1136
+    rad: -3.1485606888
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map6.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map6.yaml
+    lat: 36.08114983
+    lon: 140.083179570
+    alt: 66.4369
+    rad: -0.0215606888
+  - path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map8.yaml
+    obj_map_path: /home/uchiito-h/catkin_ws/src/Aqua2019/entry_point/map/map_change/1108/map8.yaml
+    lat: 36.081537539
+    lon: 140.0798808891
+    alt: 64.1337
+    rad: 0.9799015606888
